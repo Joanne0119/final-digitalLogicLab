@@ -1,22 +1,4 @@
-/*
-  Melody
-
-  Plays a melody
-
-  circuit:
-  - 8 ohm speaker on digital pin 8
-
-  created 21 Jan 2010
-  modified 30 Aug 2011
-  by Tom Igoe
-
-  This example code is in the public domain.
-
-  https://www.arduino.cc/en/Tutorial/BuiltInExamples/toneMelody
-*/
-
 #include "pitches.h"
-
 #define ROW1 13
 #define ROW2 12
 #define ROW3 11
@@ -25,7 +7,6 @@
 #define ROW6 8
 #define ROW7 7
 #define ROW8 6
-
 #define COL1 5
 #define COL2 4
 #define COL3 3
@@ -34,18 +15,14 @@
 #define COL6 A2
 #define COL7 A1
 #define COL8 A0
-#define BUTTON 2
-
-byte incomingByte;
+#define Button 2
 
 const int row[] = {
-
-  ROW1, ROW2, ROW3, ROW4, ROW5, ROW6, ROW7, ROW8};
+ROW1, ROW2, ROW3, ROW4, ROW5, ROW6, ROW7, ROW8};
 
 const int col[] = {
+COL1,COL2, COL3, COL4, COL5, COL6, COL7, COL8};
 
-  COL1,COL2, COL3, COL4, COL5, COL6, COL7, COL8};
-  
 byte scan[8][8] = {
 
 {1,0,0,0,0,0,0,0},
@@ -104,170 +81,126 @@ byte x[8][8] = {
   {0,1,1,1,1,1,1,0}
  };
 
-byte previousState=1, presentState=1, patternNumber=0;
+#define NOTE_C3 131
+#define NOTE_D3 147
+#define NOTE_E3 165
+#define NOTE_F3 175
+#define NOTE_G3 196
+#define NOTE_A3 220
+#define NOTE_B3 247
+#define NOTE_C4 262
+#define NOTE_D4 294
+#define NOTE_E4 330
+#define NOTE_F4 349
+#define NOTE_G4 392
+#define NOTE_A4 440
+#define NOTE_B4 494
+#define NOTE_C5 523
+#define NOTE_CS5 554
+#define NOTE_D5 587
+#define NOTE_DS5 622
+#define NOTE_E5 659
+#define NOTE_F5 698
+#define NOTE_FS5 740
+#define NOTE_G5 784
+#define NOTE_GS5 831
+#define NOTE_A5 880
+#define NOTE_AS5 932
+#define NOTE_B5 988
 
-int melody[] = {
-  NOTE_C4, NOTE_G3, NOTE_G3, NOTE_A3, NOTE_G3, 0, NOTE_B3, NOTE_C4
+int melody3[] = { //Merry have a little sheep
+  NOTE_B5, NOTE_A5, NOTE_G5, NOTE_A5, NOTE_B5, NOTE_B5, NOTE_B5, NOTE_A5, NOTE_A5, NOTE_A5,
+  NOTE_B5, NOTE_B5, NOTE_B5, NOTE_B5, NOTE_A5, NOTE_G5, NOTE_A5, NOTE_B5, NOTE_B5, NOTE_B5,
+  NOTE_A5, NOTE_A5,NOTE_B5, NOTE_A5, NOTE_G5
 };
-
-int sound[] = {
-  NOTE_G4, NOTE_E3, NOTE_E3, 
-  NOTE_F3, NOTE_D3, NOTE_D3
+int melody2[] = { //Harry Potter
+  NOTE_B5, NOTE_E6, NOTE_G6, NOTE_FS6, NOTE_E6, NOTE_B6, NOTE_A6, NOTE_FS6, NOTE_E6, NOTE_G6, NOTE_FS6, NOTE_DS6, NOTE_F6, NOTE_B5
+};//si mi sol fa# mi si la fa# mi sol fa# do fa si
+int melody1[] = { //the Last of Us
+  NOTE_G6, NOTE_E6, NOTE_A6, NOTE_FS6, NOTE_G6, 0, NOTE_G6, NOTE_E6, NOTE_A6, NOTE_FS6, NOTE_B6, 0, NOTE_G6,
+  NOTE_E6, NOTE_A6, NOTE_FS6, NOTE_G6, 0, NOTE_AS6, NOTE_A6, NOTE_G6, NOTE_E6, NOTE_E6
 };
 
 // note durations: 4 = quarter note, 8 = eighth note, etc.:
-int melodyDurations[] = {
-  4, 8, 8, 4, 4, 4, 4, 4
+int noteDurations3[] = {
+  4, 4, 4, 4, 4, 4, 2, 4, 4, 2, 4, 4, 2, 4, 4, 4, 4, 4, 4, 2, 4, 4, 4, 4, 2
+};
+int noteDurations2[] = {
+  4, 2, 8, 8, 2, 4, 1, 1, 2, 8, 8, 2, 4, 1   
+};
+int noteDurations1[] = {
+  3, 3, 3, 3, 1, 6, 3, 3, 3, 3, 1, 6, 3, 3, 3, 3, 1, 6, 3, 3, 3, 3, 1
 };
 
-int soundDurations[] = {
-  4, 8, 8, 
-  4, 8, 8
-};
-
-int melodylen[2] = {8, 6};
-
-int play = 1;
-
-
-const byte interruptPin = 2;
-
-void blink() {
-  play = 1 - play;
-}
-
-
-void showPattern(byte matrix[8][8]){
-
-  for(byte i = 0; i < 8; i++){
-  
-    for(byte j = 0; j < 8; j++){
-    
-      digitalWrite(row[j], 1 - scan[i][j]);
-      
-      digitalWrite(col[j], 1 - matrix[i][j]);
-  
-    }
-    
-    for(byte j = 0; j < 8; j++){
-    
-      digitalWrite(row[j], HIGH);
-      
-      digitalWrite(col[j], LOW);
-  
-    }
-
-  }
-
-}
+byte previous=1,present=1,num=0;
 
 void setup() {
-  // iterate over the notes of the melody:
-  pinMode(interruptPin, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(interruptPin), blink, FALLING );
-  for (byte i = 0; i <= sizeof(row); i++) {
-  
-    pinMode(row[i], OUTPUT);
-  
-  }
-  
-  for (byte i = 0; i <= sizeof(col); i++) {
-  
-    pinMode(col[i], OUTPUT);
-  
-  }
-  
-    pinMode(2, INPUT_PULLUP);
-
-
+  for (byte i = 0; i <= sizeof(row); i++) {pinMode(row[i], OUTPUT);}
+  for (byte i = 0; i <= sizeof(col); i++) {pinMode(col[i], OUTPUT);}
+  pinMode(Button, INPUT_PULLUP); 
   Serial.begin(9600);
-
-for (byte i = 0; i <= sizeof(row); i++) { pinMode(row[i], OUTPUT); }
-
-for (byte i = 0; i <= sizeof(col); i++) { pinMode(col[i], OUTPUT); }
-
-pinMode(2, INPUT_PULLUP);
 
 }
 
-
-
-
+void showPattern(byte matrix[8][8]){
+  for(byte i = 0; i < 8; i++){
+    for(byte j = 0; j < 8; j++){
+      digitalWrite(row[j], 1 - scan[i][j]);
+      digitalWrite(col[j], 1 - matrix[i][j]);
+      }
+    for(byte j = 0; j < 8; j++){
+    digitalWrite(row[j], HIGH);
+    digitalWrite(col[j], LOW);
+    }
+  }
+}
 
 void loop() {
-
-while(play == 1) {
-    for (int thisNote = 0; thisNote < melodylen[0]; thisNote++) {
-        
-//          presentState = digitalRead(interruptPin);
-//          if(presentState == 0 && previousState == 1){
-//            patternNumber = 1 - patternNumber;
-//          }
-//           if(patternNumber == 0){
-//            showPattern(x);
-//           }else {
-//              showPattern(heart);
-//           }
-//           delay(5);
-//           previousState = presentState;
-//          ////
-      showPattern(x);
-      // to calculate the note duration, take one second divided by the note type.
-      //e.g. quarter note = 1000 / 4, eighth note = 1000/8, etc.
-      int noteDuration = 1000 / melodyDurations[thisNote];
-      tone(A5, melody[thisNote], noteDuration);
-
-      // to distinguish the notes, set a minimum time between them.
-      // the note's duration + 30% seems to work well:
-      int pauseBetweenNotes = noteDuration * 1.30;
-      delay(pauseBetweenNotes);
-      // stop the tone playing:
-      noTone(A5);
-      if(play != 1){
-        thisNote = melodylen[0];
-//        break;
-      }
+  present=digitalRead(Button);
+  if(present == 1 && previous == 0){
+    num++;
+    if(num > 1){
+      num = 0;  
     }
-    Serial.println(play);
-    Serial.println(patternNumber);
   }
-  
-  while(play == 0) {
+  Serial.println(num);
 
-    for (int thisNote = 0; thisNote < 6; thisNote++) {
-//      presentState = digitalRead(interruptPin);
-//      if(presentState == 0 && previousState == 1){
-//        patternNumber = 1 - patternNumber;
-//      }
-//       if(patternNumber == 0){
-//        showPattern(x);
-//       }else {
-//          showPattern(heart);
-//       }
-//       delay(5);
-//       previousState = presentState;
-//        ////
-        showPattern(heart);
-      // to calculate the note duration, take one second divided by the note type.
-      //e.g. quarter note = 1000 / 4, eighth note = 1000/8, etc.
-      int noteDuration = 1000 / soundDurations[thisNote];
-      tone(A5, sound[thisNote], noteDuration);
+  //可變電阻
+  int resis = analogRead(2);
+  Serial.println(resis);
+  delay(1); 
 
-      // to distinguish the notes, set a minimum time between them.
-      // the note's duration + 30% seems to work well:
-      int pauseBetweenNotes = noteDuration * 1.30;
-      delay(pauseBetweenNotes);
-      // stop the tone playing:
+ 
+  //蜂鳴器
+  while(num==0 && present!=0) {
+    for (int i = 0; i < 23; i++) {
+      showPattern(heart);
+
+      int duration = 900 / noteDurations1[i];
+      tone(A5, melody1[i], duration);
+
+      for (int i=0;i<duration;i++) showPattern(heart);
+      
       noTone(A5);
-      if(play != 0){
-        thisNote = melodylen[0];
-//        break;
-      }
-        
+      present=digitalRead(Button);if(present==0) break;
     }
-    Serial.println(play);
-    Serial.println(patternNumber);
+    delay(500);
   }
+  while(num==1 && present!=0) {
+    for (int i = 0; i < 14; i++) {
+      showPattern(x); //LED
+
+      int duration = 900 / noteDurations2[i];
+      tone(A5, melody2[i], duration);
+
+      for (int i=0;i<duration;i++) showPattern(x);
+
+      noTone(A5);
+      present=digitalRead(Button);if(present==0) break;
+    }
+    delay(500);
+  }
+  previous=present;
 }
 
 ////
